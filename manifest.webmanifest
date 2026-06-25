@@ -1,0 +1,9 @@
+{
+  "name": "WATSON Athlete",
+  "short_name": "WATSON",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#101214",
+  "theme_color": "#101214",
+  "description": "선수 HRV와 보행 균형을 측정하는 모바일 웹앱"
+}
