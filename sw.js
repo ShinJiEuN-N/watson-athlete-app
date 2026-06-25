@@ -1,4 +1,4 @@
-const CACHE_NAME = "watson-athlete-v1";
+const CACHE_NAME = "watson-athlete-v2";
 const APP_ASSETS = [
   "./",
   "./index.html",
