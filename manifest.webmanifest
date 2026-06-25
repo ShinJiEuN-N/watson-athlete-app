@@ -1,9 +1,19 @@
 {
   "name": "WATSON Athlete",
   "short_name": "WATSON",
+  "id": "/watson-athlete-app/",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#101214",
   "theme_color": "#101214",
-  "description": "선수 HRV와 보행 균형을 측정하는 모바일 웹앱"
+  "description": "선수 HRV와 보행 균형을 측정하는 모바일 웹앱",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
