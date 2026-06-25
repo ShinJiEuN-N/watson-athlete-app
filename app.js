@@ -7,6 +7,10 @@ const state = {
   hrvBeats: [],
   gaitSamples: [],
   timers: [],
+  installPrompt: null,
+  database: null,
+  selectedSchool: null,
+  selectedPlayer: null,
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -26,6 +30,71 @@ function showScreen(name) {
     gait: "보행",
     result: "결과",
   }[name];
+}
+
+async function loadPlayerDatabase() {
+  try {
+    const response = await fetch("./data/bukil-players.json");
+    state.database = await response.json();
+    renderSchoolOptions();
+  } catch {
+    $("#playerSnapshot").textContent =
+      "선수 데이터 파일을 불러오지 못했습니다. GitHub Pages 배포 후 다시 확인하세요.";
+  }
+}
+
+function renderSchoolOptions() {
+  const schools = state.database?.schools || [];
+  const schoolSelect = $("#schoolSelect");
+  schoolSelect.innerHTML = schools
+    .map((school) => `<option value="${school.id}">${school.name}</option>`)
+    .join("");
+  state.selectedSchool = schools[0] || null;
+  renderPlayerOptions();
+}
+
+function renderPlayerOptions() {
+  const playerSelect = $("#playerSelect");
+  const players = state.selectedSchool?.players || [];
+  playerSelect.innerHTML =
+    `<option value="">선수를 선택하세요</option>` +
+    players
+      .map((player) => {
+        const number = player.number ? ` #${player.number}` : "";
+        return `<option value="${player.id}">${player.name}${number} · ${player.gradeEstimate}</option>`;
+      })
+      .join("");
+  state.selectedPlayer = null;
+  renderPlayerSnapshot();
+}
+
+function selectPlayer(playerId) {
+  const players = state.selectedSchool?.players || [];
+  state.selectedPlayer = players.find((player) => player.id === playerId) || null;
+  if (state.selectedPlayer) {
+    $("#athleteName").value = state.selectedPlayer.name;
+    $("#athleteNo").value = state.selectedPlayer.number || "";
+  }
+  renderPlayerSnapshot();
+}
+
+function renderPlayerSnapshot() {
+  const player = state.selectedPlayer;
+  if (!player) {
+    $("#playerSnapshot").textContent = "선수를 선택하면 2024~2026 경기 흐름과 학년 추정 정보가 표시됩니다.";
+    return;
+  }
+  const y2026 = player.years?.find((item) => item.season === "2026")?.batting || {};
+  const trend = player.trend || {};
+  $("#playerSnapshot").innerHTML = `
+    <strong>${player.name}${player.number ? ` #${player.number}` : ""}</strong>
+    <div>${player.school} · ${player.gradeEstimate} · ${player.gradeEvidence || "기록 기반 추정"}</div>
+    <div class="snapshot-grid">
+      <div><small>2026 OPS</small><strong>${trend.ops2026 || y2026.ops || "-"}</strong></div>
+      <div><small>2026 타율</small><strong>${trend.avg2026 || y2026.avg || "-"}</strong></div>
+      <div><small>흐름</small><strong>${trend.label || "확인 필요"}</strong></div>
+    </div>
+  `;
 }
 
 function setTimer(id, seconds, onTick, onDone) {
@@ -59,9 +128,7 @@ function avg(values) {
 
 function std(values) {
   const mean = avg(values);
-  return values.length
-    ? Math.sqrt(avg(values.map((value) => (value - mean) ** 2)))
-    : 0;
+  return values.length ? Math.sqrt(avg(values.map((value) => (value - mean) ** 2))) : 0;
 }
 
 function drawField() {
@@ -69,13 +136,11 @@ function drawField() {
   const ctx = canvas.getContext("2d");
   const { width: w, height: h } = canvas;
   ctx.clearRect(0, 0, w, h);
-
   const sky = ctx.createLinearGradient(0, 0, 0, h);
   sky.addColorStop(0, "#18242e");
   sky.addColorStop(1, "#101214");
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, w, h);
-
   ctx.fillStyle = "#1f2f3d";
   ctx.beginPath();
   ctx.moveTo(0, h * 0.55);
@@ -84,7 +149,6 @@ function drawField() {
   ctx.quadraticCurveTo(w / 2, h * 0.42, 0, h * 0.67);
   ctx.closePath();
   ctx.fill();
-
   for (let i = 0; i < 4; i += 1) {
     ctx.strokeStyle = `rgba(255,255,255,${0.08 - i * 0.01})`;
     ctx.lineWidth = 4;
@@ -93,13 +157,11 @@ function drawField() {
     ctx.quadraticCurveTo(w / 2, h * (0.34 + i * 0.045), w, h * (0.58 + i * 0.045));
     ctx.stroke();
   }
-
   const grass = ctx.createLinearGradient(0, h * 0.6, 0, h);
   grass.addColorStop(0, "#2c7c46");
   grass.addColorStop(1, "#174d32");
   ctx.fillStyle = grass;
   ctx.fillRect(0, h * 0.62, w, h * 0.38);
-
   ctx.fillStyle = "rgba(255,255,255,0.07)";
   for (let x = -80; x < w; x += 180) {
     ctx.beginPath();
@@ -110,7 +172,6 @@ function drawField() {
     ctx.closePath();
     ctx.fill();
   }
-
   const cx = w / 2;
   const cy = h * 0.78;
   ctx.fillStyle = "#b87a42";
@@ -121,11 +182,9 @@ function drawField() {
   ctx.lineTo(cx - 105, cy);
   ctx.closePath();
   ctx.fill();
-
   ctx.strokeStyle = "#f1dbb2";
   ctx.lineWidth = 4;
   ctx.stroke();
-
   ctx.fillStyle = "#f7f1e8";
   [[cx, cy - 70], [cx + 105, cy], [cx, cy + 55], [cx - 105, cy]].forEach(([x, y]) => {
     ctx.save();
@@ -134,12 +193,6 @@ function drawField() {
     ctx.fillRect(-7, -7, 14, 14);
     ctx.restore();
   });
-
-  ctx.fillStyle = "rgba(78,156,255,0.5)";
-  ctx.fillRect(116, 68, 114, 42);
-  ctx.fillStyle = "rgba(82,210,115,0.7)";
-  ctx.fillRect(130, 80, 30, 8);
-  ctx.fillRect(130, 94, 54, 8);
 }
 
 function drawWave(canvas, values, color) {
@@ -149,12 +202,10 @@ function drawWave(canvas, values, color) {
   ctx.strokeStyle = color;
   ctx.lineWidth = 4;
   ctx.beginPath();
-
   const slice = values.slice(-120);
   const min = Math.min(...slice, 0);
   const max = Math.max(...slice, 1);
   const range = max - min || 1;
-
   slice.forEach((value, index) => {
     const x = (index / Math.max(slice.length - 1, 1)) * width;
     const y = height - 10 - ((value - min) / range) * (height - 20);
@@ -170,12 +221,8 @@ async function startHrv() {
   state.hrvSamples = [];
   state.hrvBeats = [];
   $("#bpm").textContent = "--";
-
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "environment" },
-      audio: false,
-    });
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
     state.cameraStream = stream;
     $("#cameraPreview").srcObject = stream;
     await $("#cameraPreview").play();
@@ -183,7 +230,6 @@ async function startHrv() {
   } catch {
     useDemoHrv(false);
   }
-
   setTimer("#hrvTimer", 30, null, finishHrv);
 }
 
@@ -194,7 +240,6 @@ function sampleCamera() {
   hidden.height = 48;
   const ctx = hidden.getContext("2d", { willReadFrequently: true });
   const started = performance.now();
-
   function tick() {
     if (state.screen !== "hrv" || !state.cameraStream) return;
     try {
@@ -207,9 +252,7 @@ function sampleCamera() {
       state.hrvSamples.push(value);
       detectBeat(value, t);
       drawWave($("#hrvWave"), state.hrvSamples, "#ff6464");
-    } catch {
-      // Camera frame can be temporarily unavailable.
-    }
+    } catch {}
     requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
@@ -237,18 +280,13 @@ function finishHrv() {
     const ms = (state.hrvBeats[i] - state.hrvBeats[i - 1]) * 1000;
     if (ms > 320 && ms < 1500) intervals.push(ms);
   }
-
   if (intervals.length < 5) {
     useDemoHrv(true);
     return;
   }
-
   const mean = avg(intervals);
   let squared = 0;
-  for (let i = 1; i < intervals.length; i += 1) {
-    squared += (intervals[i] - intervals[i - 1]) ** 2;
-  }
-
+  for (let i = 1; i < intervals.length; i += 1) squared += (intervals[i] - intervals[i - 1]) ** 2;
   const rmssd = Math.round(Math.sqrt(squared / Math.max(intervals.length - 1, 1)));
   const bpm = Math.round(60000 / mean);
   const recovery = clamp(Math.round((rmssd / 70) * 100), 20, 99);
@@ -264,13 +302,7 @@ function stopCamera() {
 
 function useDemoHrv(goNext = true) {
   stopCamera();
-  state.hrv = {
-    bpm: 68,
-    rmssd: 52,
-    recovery: 74,
-    fatigue: 31,
-    source: "demo",
-  };
+  state.hrv = { bpm: 68, rmssd: 52, recovery: 74, fatigue: 31, source: "demo" };
   $("#bpm").textContent = "68";
   const values = Array.from({ length: 120 }, (_, index) => 120 + Math.sin(index * 0.34) * 14);
   drawWave($("#hrvWave"), values, "#ff6464");
@@ -282,28 +314,20 @@ async function startGait() {
   showScreen("gait");
   state.gaitSamples = [];
   $("#stepCount").textContent = "0";
-
   const permissionGranted = await requestMotionPermission();
   if (!permissionGranted) {
     useDemoGait();
     return;
   }
-
   const started = performance.now();
   const handler = (event) => {
     const acc = event.accelerationIncludingGravity || event.acceleration;
     if (!acc) return;
-    const item = {
-      t: (performance.now() - started) / 1000,
-      x: acc.x || 0,
-      y: acc.y || 0,
-      z: acc.z || 0,
-    };
+    const item = { t: (performance.now() - started) / 1000, x: acc.x || 0, y: acc.y || 0, z: acc.z || 0 };
     state.gaitSamples.push(item);
     updateLiveStep(item);
     drawWave($("#gaitWave"), state.gaitSamples.map((sample) => sample.y), "#4e9cff");
   };
-
   window.addEventListener("devicemotion", handler);
   setTimer("#gaitTimer", 20, null, () => {
     window.removeEventListener("devicemotion", handler);
@@ -328,9 +352,7 @@ let liveStep = 0;
 
 function updateLiveStep(sample) {
   const magnitude = Math.sqrt(sample.x ** 2 + sample.y ** 2 + sample.z ** 2);
-  const recent = state.gaitSamples
-    .slice(-20)
-    .map((item) => Math.sqrt(item.x ** 2 + item.y ** 2 + item.z ** 2));
+  const recent = state.gaitSamples.slice(-20).map((item) => Math.sqrt(item.x ** 2 + item.y ** 2 + item.z ** 2));
   if (magnitude > avg(recent) + 1.2 && sample.t - lastStepAt > 0.32) {
     lastStepAt = sample.t;
     liveStep += 1;
@@ -351,13 +373,8 @@ function finishGait() {
     useDemoGait();
     return;
   }
-
-  const axes = ["x", "y", "z"].map((axis) => ({
-    axis,
-    deviation: std(samples.map((sample) => sample[axis])),
-  }));
+  const axes = ["x", "y", "z"].map((axis) => ({ axis, deviation: std(samples.map((sample) => sample[axis])) }));
   axes.sort((a, b) => b.deviation - a.deviation);
-
   const vertical = axes[0].axis;
   const lateral = axes[1].axis;
   const verticalValues = samples.map((sample) => sample[vertical]);
@@ -366,24 +383,16 @@ function finishGait() {
   const threshold = std(verticalValues) * 0.58;
   const peaks = [];
   let lastPeak = -999;
-
   verticalValues.forEach((value, index) => {
-    if (
-      value - mean > threshold &&
-      value >= (verticalValues[index - 1] ?? value) &&
-      value > (verticalValues[index + 1] ?? value) &&
-      index - lastPeak > 7
-    ) {
+    if (value - mean > threshold && value >= (verticalValues[index - 1] ?? value) && value > (verticalValues[index + 1] ?? value) && index - lastPeak > 7) {
       peaks.push(index);
       lastPeak = index;
     }
   });
-
   if (peaks.length < 4) {
     useDemoGait();
     return;
   }
-
   const left = [];
   const right = [];
   peaks.forEach((index, order) => {
@@ -391,28 +400,16 @@ function finishGait() {
     if (order % 2 === 0) left.push(value);
     else right.push(value);
   });
-
   const leftAvg = avg(left) || 1;
   const rightAvg = avg(right) || 1;
   const leftShare = Math.round((leftAvg / (leftAvg + rightAvg)) * 100);
   const rightShare = 100 - leftShare;
   const balance = Math.round(100 - Math.abs(leftShare - rightShare));
-
   const duration = samples.at(-1).t - samples[0].t;
   const cadence = Math.round((peaks.length / duration) * 60);
   const stability = clamp(Math.round(100 - (std(lateralValues) / (avg(lateralValues.map(Math.abs)) || 1)) * 18), 40, 99);
   const rhythm = computeRhythm(peaks, samples.length ? duration / samples.length : 0.04);
-
-  state.gait = {
-    steps: peaks.length,
-    leftShare,
-    rightShare,
-    balance,
-    cadence,
-    stability,
-    rhythm,
-    source: "sensor",
-  };
+  state.gait = { steps: peaks.length, leftShare, rightShare, balance, cadence, stability, rhythm, source: "sensor" };
   renderResult();
 }
 
@@ -428,28 +425,20 @@ function useDemoGait() {
   const values = Array.from({ length: 140 }, (_, index) => Math.sin(index * 0.42) * 10 + Math.random() * 1.5);
   drawWave($("#gaitWave"), values, "#4e9cff");
   $("#stepCount").textContent = "35";
-  state.gait = {
-    steps: 35,
-    leftShare: 48,
-    rightShare: 52,
-    balance: 96,
-    cadence: 112,
-    stability: 82,
-    rhythm: 86,
-    source: "demo",
-  };
+  state.gait = { steps: 35, leftShare: 48, rightShare: 52, balance: 96, cadence: 112, stability: 82, rhythm: 86, source: "demo" };
   renderResult();
 }
 
 function renderResult() {
   const hrv = state.hrv || { recovery: 70, fatigue: 38, source: "fallback" };
   const gait = state.gait || { balance: 82, stability: 76, rhythm: 78, cadence: 0 };
+  const bio = readBioInputs();
   const gaitScore = Math.round((gait.balance + gait.stability + gait.rhythm) / 3);
-  const readiness = clamp(Math.round(hrv.recovery * 0.42 + gaitScore * 0.42 + (100 - hrv.fatigue) * 0.16), 0, 99);
-
+  const bioScore = computeBioScore(bio);
+  const playerAdjustment = computePlayerAdjustment(state.selectedPlayer);
+  const readiness = clamp(Math.round(hrv.recovery * 0.32 + gaitScore * 0.32 + (100 - hrv.fatigue) * 0.12 + bioScore * 0.18 + playerAdjustment), 0, 99);
   const label = readiness >= 85 ? "경기 준비 양호" : readiness >= 70 ? "관리하며 출전" : "컨디션 점검 필요";
   const athlete = $("#athleteName").value.trim();
-
   $("#resultName").textContent = athlete ? `${athlete} 선수 결과` : "측정 결과";
   $("#readinessScore").textContent = readiness;
   $("#readinessLabel").textContent = label;
@@ -457,38 +446,64 @@ function renderResult() {
   $("#fatigueScore").textContent = hrv.fatigue;
   $("#balanceScore").textContent = gait.balance;
   $("#rhythmScore").textContent = gait.rhythm;
-
-  state.result = {
-    date: new Date().toLocaleString("ko-KR"),
-    athlete: athlete || "이름 없음",
-    number: $("#athleteNo").value.trim(),
-    position: $("#position").value,
-    readiness,
-    recovery: hrv.recovery,
-    fatigue: hrv.fatigue,
-    balance: gait.balance,
-    rhythm: gait.rhythm,
-    cadence: gait.cadence,
-    label,
-  };
-
-  renderInsights(hrv, gait, readiness);
+  state.result = { date: new Date().toLocaleString("ko-KR"), athlete: athlete || "이름 없음", number: $("#athleteNo").value.trim(), position: $("#position").value, readiness, recovery: hrv.recovery, fatigue: hrv.fatigue, bioScore, balance: gait.balance, rhythm: gait.rhythm, cadence: gait.cadence, label };
+  renderInsights(hrv, gait, readiness, bio);
+  renderPlayerContext(bio, readiness);
   renderHistory();
   showScreen("result");
 }
 
-function renderInsights(hrv, gait, readiness) {
+function readBioInputs() {
+  return { sleepHours: Number($("#sleepHours").value || 0), fatigue: Number($("#fatigueInput").value || 0), soreness: Number($("#sorenessInput").value || 0), stress: Number($("#stressInput").value || 0), painArea: $("#painArea").value.trim() };
+}
+
+function computeBioScore(bio) {
+  const sleepScore = bio.sleepHours ? clamp(100 - Math.abs(7.5 - bio.sleepHours) * 12, 45, 100) : 72;
+  const fatigueScore = 100 - bio.fatigue * 7;
+  const sorenessScore = 100 - bio.soreness * 6;
+  const stressScore = 100 - bio.stress * 5;
+  const painPenalty = bio.painArea ? 10 : 0;
+  return clamp(Math.round(sleepScore * 0.32 + fatigueScore * 0.28 + sorenessScore * 0.24 + stressScore * 0.16 - painPenalty), 0, 100);
+}
+
+function computePlayerAdjustment(player) {
+  const trend = player?.trend?.label || "";
+  if (trend.includes("상승")) return 4;
+  if (trend.includes("하락")) return -5;
+  return 0;
+}
+
+function renderInsights(hrv, gait, readiness, bio) {
   const insights = [];
   if (readiness >= 85) insights.push("전체 준비도가 높습니다. 정상 훈련 또는 경기 투입 판단이 가능합니다.");
   else if (readiness >= 70) insights.push("경기 투입은 가능하지만 워밍업과 회복 상태 확인이 필요합니다.");
   else insights.push("피로 누적 또는 균형 저하 가능성이 있어 출전 전 추가 점검이 필요합니다.");
-
   if (hrv.fatigue >= 55) insights.push("피로도가 높게 측정됐습니다. 수면, 수분, 전날 훈련량을 확인하세요.");
+  if (bio.sleepHours && bio.sleepHours < 6) insights.push("수면 시간이 짧습니다. 반응 속도와 회복 저하 가능성을 함께 봐야 합니다.");
+  if (bio.soreness >= 7) insights.push("근육 뻐근함이 높습니다. 전력 질주나 투구량을 보수적으로 관리하세요.");
+  if (bio.painArea) insights.push(`${bio.painArea} 통증 메모가 있습니다. 해당 부위 가동성과 통증 정도를 확인하세요.`);
   if (gait.balance < 88) insights.push(`좌우 균형이 ${gait.balance}%로 낮습니다. 하체 불균형이나 통증 여부를 확인하세요.`);
   if (gait.rhythm < 78) insights.push("보행 리듬 변동이 큽니다. 급격한 방향 전환이나 스프린트 전 준비운동을 늘리는 편이 좋습니다.");
   if (hrv.source === "demo" || gait.source === "demo") insights.push("일부 값은 데모 데이터입니다. 실제 모바일 HTTPS 환경에서 다시 측정하세요.");
-
   $("#insights").innerHTML = insights.map((text) => `<li>${text}</li>`).join("");
+}
+
+function renderPlayerContext(bio, readiness) {
+  const player = state.selectedPlayer;
+  if (!player) {
+    $("#playerContext").innerHTML = `<div class="context-item">선수를 선택하면 경기기록과 바이오 컨디션을 결합한 분석이 표시됩니다.</div>`;
+    return;
+  }
+  const trend = player.trend || {};
+  const y2026 = player.years?.find((item) => item.season === "2026")?.batting || {};
+  const bioScore = computeBioScore(bio);
+  const trendLabel = trend.label || "확인 필요";
+  const playerRisk = readiness < 70 || bioScore < 65 ? "관리 필요" : trendLabel.includes("상승") ? "상승 흐름 유지" : "정상 관찰";
+  $("#playerContext").innerHTML = `
+    <div class="context-item"><small>선수 프로필</small><strong>${player.school} · ${player.gradeEstimate}</strong><br />${player.gradeEvidence || "학년은 기록 기반 추정값입니다."}</div>
+    <div class="context-item"><small>경기력 흐름</small><strong>${trendLabel}</strong><br />2026 OPS ${trend.ops2026 || y2026.ops || "-"} · 타율 ${trend.avg2026 || y2026.avg || "-"}</div>
+    <div class="context-item"><small>바이오 결합 판단</small><strong>${playerRisk}</strong><br />바이오 점수 ${bioScore} · 경기 준비도 ${readiness}</div>
+  `;
 }
 
 function saveResult() {
@@ -501,18 +516,7 @@ function saveResult() {
 
 function renderHistory() {
   const history = JSON.parse(localStorage.getItem("watsonHistory") || "[]");
-  $("#historyList").innerHTML = history.length
-    ? history
-        .map(
-          (item) => `
-            <div class="history-item">
-              <div><strong>${item.athlete}</strong><br />${item.date}</div>
-              <strong>${item.readiness}</strong>
-            </div>
-          `,
-        )
-        .join("")
-    : `<div class="history-item">저장된 측정 결과가 없습니다.</div>`;
+  $("#historyList").innerHTML = history.length ? history.map((item) => `<div class="history-item"><div><strong>${item.athlete}</strong><br />${item.date}</div><strong>${item.readiness}</strong></div>`).join("") : `<div class="history-item">저장된 측정 결과가 없습니다.</div>`;
 }
 
 function resetApp() {
@@ -534,6 +538,16 @@ function resetApp() {
 
 function bindEvents() {
   $$(".step").forEach((button) => button.addEventListener("click", () => showScreen(button.dataset.step)));
+  $("#schoolSelect").addEventListener("change", (event) => {
+    state.selectedSchool = state.database?.schools?.find((school) => school.id === event.target.value) || null;
+    renderPlayerOptions();
+  });
+  $("#playerSelect").addEventListener("change", (event) => selectPlayer(event.target.value));
+  ["fatigueInput", "sorenessInput", "stressInput"].forEach((id) => {
+    $(`#${id}`).addEventListener("input", (event) => {
+      $(`#${id.replace("Input", "Value")}`).textContent = event.target.value;
+    });
+  });
   $("#startHrvBtn").addEventListener("click", startHrv);
   $("#demoProfileBtn").addEventListener("click", () => {
     state.hrv = { bpm: 68, rmssd: 52, recovery: 74, fatigue: 31, source: "demo" };
@@ -546,8 +560,39 @@ function bindEvents() {
   $("#skipGaitBtn").addEventListener("click", useDemoGait);
   $("#saveResultBtn").addEventListener("click", saveResult);
   $("#resetBtn").addEventListener("click", resetApp);
+  $("#installAppBtn").addEventListener("click", installApp);
+}
+
+function setupPwa() {
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  }
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    state.installPrompt = event;
+    $("#installAppBtn").hidden = false;
+    $("#installHelp").textContent = "설치 버튼을 누르면 홈 화면 앱처럼 사용할 수 있습니다.";
+  });
+  window.addEventListener("appinstalled", () => {
+    state.installPrompt = null;
+    $("#installAppBtn").hidden = true;
+    $("#installHelp").textContent = "앱 설치가 완료됐습니다. 홈 화면에서 바로 실행할 수 있습니다.";
+  });
+}
+
+async function installApp() {
+  if (!state.installPrompt) {
+    $("#installHelp").textContent = "iPhone은 Safari 공유 버튼에서 '홈 화면에 추가'를 선택하면 설치됩니다.";
+    return;
+  }
+  state.installPrompt.prompt();
+  await state.installPrompt.userChoice;
+  state.installPrompt = null;
+  $("#installAppBtn").hidden = true;
 }
 
 drawField();
 bindEvents();
 renderHistory();
+setupPwa();
+loadPlayerDatabase();
