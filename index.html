@@ -6,106 +6,26 @@
     <meta name="theme-color" content="#101214" />
     <title>WATSON Athlete</title>
     <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./enhance.css" />
     <link rel="manifest" href="./manifest.webmanifest" />
   </head>
   <body>
     <main class="app-shell">
-      <section class="topbar">
-        <div>
-          <p class="eyebrow">WATSON Athlete</p>
-          <h1>선수 컨디션 측정</h1>
-        </div>
-        <div class="top-actions">
-          <button class="install-btn" id="installAppBtn" type="button" hidden>앱 설치</button>
-          <div class="status-pill" id="modeLabel">대기</div>
-        </div>
-      </section>
-
-      <section class="visual-panel" aria-label="야구장 시각화">
-        <canvas id="fieldCanvas" width="900" height="360"></canvas>
-        <div class="visual-copy">
-          <strong>경기 준비도</strong>
-          <span>HRV + 보행 균형 기반</span>
-        </div>
-      </section>
-
-      <nav class="stepper" aria-label="측정 단계">
-        <button class="step active" data-step="profile" type="button"><span>1</span>선수</button>
-        <button class="step" data-step="hrv" type="button"><span>2</span>HRV</button>
-        <button class="step" data-step="gait" type="button"><span>3</span>보행</button>
-        <button class="step" data-step="result" type="button"><span>4</span>결과</button>
-      </nav>
-
+      <section class="topbar"><div><p class="eyebrow">WATSON Athlete</p><h1>선수 컨디션 측정</h1></div><div class="top-actions"><button class="install-btn" id="installAppBtn" type="button" hidden>앱 설치</button><div class="status-pill" id="modeLabel">대기</div></div></section>
+      <section class="visual-panel" aria-label="야구장 시각화"><canvas id="fieldCanvas" width="900" height="360"></canvas><div class="visual-copy"><strong>경기 준비도</strong><span>HRV + 보행 균형 기반</span></div></section>
+      <nav class="stepper" aria-label="측정 단계"><button class="step active" data-step="profile" type="button"><span>1</span>선수</button><button class="step" data-step="hrv" type="button"><span>2</span>HRV</button><button class="step" data-step="gait" type="button"><span>3</span>보행</button><button class="step" data-step="result" type="button"><span>4</span>결과</button></nav>
       <section id="profile" class="screen active">
-        <div class="panel">
-          <div class="section-title"><span>선수 데이터베이스</span><small>학교별 확장 가능</small></div>
-          <label class="field"><span>학교</span><select id="schoolSelect"><option value="">데이터 불러오는 중</option></select></label>
-          <label class="field"><span>선수</span><select id="playerSelect"><option value="">선수를 선택하세요</option></select></label>
-          <div class="player-snapshot" id="playerSnapshot">북일고 2024~2026 기록 데이터를 불러오고 있습니다.</div>
-        </div>
-
-        <div class="panel">
-          <div class="section-title"><span>선수 정보</span><small>기록 저장용</small></div>
-          <label class="field"><span>선수명</span><input id="athleteName" autocomplete="name" placeholder="예: 홍길동" /></label>
-          <div class="grid two">
-            <label class="field"><span>등번호</span><input id="athleteNo" inputmode="numeric" placeholder="예: 22" /></label>
-            <label class="field"><span>포지션</span><select id="position"><option value="">선택</option><option>투수</option><option>포수</option><option>내야수</option><option>외야수</option><option>지명타자</option></select></label>
-          </div>
-          <label class="field"><span>메모</span><textarea id="memo" rows="3" placeholder="훈련 상태, 통증, 수면 등"></textarea></label>
-        </div>
-
-        <div class="panel">
-          <div class="section-title"><span>바이오 컨디션</span><small>자가 입력 + 측정값 결합</small></div>
-          <div class="grid two">
-            <label class="field"><span>수면 시간</span><input id="sleepHours" inputmode="decimal" placeholder="예: 7.5" /></label>
-            <label class="field"><span>통증 부위</span><input id="painArea" placeholder="예: 어깨, 허리" /></label>
-          </div>
-          <label class="range-field"><span>피로감</span><input id="fatigueInput" type="range" min="0" max="10" value="4" /><em><b id="fatigueValue">4</b>/10</em></label>
-          <label class="range-field"><span>근육 뻐근함</span><input id="sorenessInput" type="range" min="0" max="10" value="3" /><em><b id="sorenessValue">3</b>/10</em></label>
-          <label class="range-field"><span>심리 스트레스</span><input id="stressInput" type="range" min="0" max="10" value="3" /><em><b id="stressValue">3</b>/10</em></label>
-        </div>
-
-        <div class="panel compact">
-          <div class="metric-row">
-            <div><strong>측정 구성</strong><p>손가락 카메라 HRV 30초, 휴대폰 보행 20초</p></div>
-            <button class="icon-btn" type="button" id="demoProfileBtn" title="데모 값으로 확인">Demo</button>
-          </div>
-          <p class="install-help" id="installHelp">링크를 공유하면 바로 실행됩니다. 모바일에서는 브라우저 메뉴에서 홈 화면에 추가할 수 있습니다.</p>
-        </div>
-        <div class="actions"><button class="primary" type="button" id="startHrvBtn">HRV 측정 시작</button></div>
+        <div class="panel"><div class="section-title"><span>선수 데이터베이스</span><small>학교별 확장 가능</small></div><label class="field"><span>학교</span><select id="schoolSelect"><option value="">데이터 불러오는 중</option></select></label><label class="field"><span>선수</span><select id="playerSelect"><option value="">선수를 선택하세요</option></select></label><div class="player-snapshot" id="playerSnapshot">북일고 2024~2026 기록 데이터를 불러오고 있습니다.</div></div>
+        <div class="panel"><div class="section-title"><span>선수 상세 분석</span><small>기록 흐름</small></div><div id="playerDetail" class="player-detail">선수를 선택하면 학년 추정, 기록 흐름, 관리 포인트가 표시됩니다.</div></div>
+        <div class="panel"><div class="section-title"><span>선수 정보</span><small>기록 저장용</small></div><label class="field"><span>선수명</span><input id="athleteName" autocomplete="name" placeholder="예: 홍길동" /></label><div class="grid two"><label class="field"><span>등번호</span><input id="athleteNo" inputmode="numeric" placeholder="예: 22" /></label><label class="field"><span>포지션</span><select id="position"><option value="">선택</option><option>투수</option><option>포수</option><option>내야수</option><option>외야수</option><option>지명타자</option></select></label></div><label class="field"><span>메모</span><textarea id="memo" rows="3" placeholder="훈련 상태, 통증, 수면 등"></textarea></label></div>
+        <div class="panel"><div class="section-title"><span>바이오 컨디션</span><small>자가 입력 + 측정값 결합</small></div><div class="grid two"><label class="field"><span>수면 시간</span><input id="sleepHours" inputmode="decimal" placeholder="예: 7.5" /></label><label class="field"><span>통증 부위</span><input id="painArea" placeholder="예: 어깨, 허리" /></label></div><label class="range-field"><span>피로감</span><input id="fatigueInput" type="range" min="0" max="10" value="4" /><em><b id="fatigueValue">4</b>/10</em></label><label class="range-field"><span>근육 뻐근함</span><input id="sorenessInput" type="range" min="0" max="10" value="3" /><em><b id="sorenessValue">3</b>/10</em></label><label class="range-field"><span>심리 스트레스</span><input id="stressInput" type="range" min="0" max="10" value="3" /><em><b id="stressValue">3</b>/10</em></label></div>
+        <div class="panel compact"><div class="metric-row"><div><strong>측정 구성</strong><p>손가락 카메라 HRV 30초, 휴대폰 보행 20초</p></div><button class="icon-btn" type="button" id="demoProfileBtn" title="데모 값으로 확인">Demo</button></div><p class="install-help" id="installHelp">링크를 공유하면 바로 실행됩니다. 모바일에서는 브라우저 메뉴에서 홈 화면에 추가할 수 있습니다.</p></div><div class="actions"><button class="primary" type="button" id="startHrvBtn">HRV 측정 시작</button></div>
       </section>
-
-      <section id="hrv" class="screen">
-        <div class="panel">
-          <div class="section-title"><span>HRV 측정</span><small>카메라 기반 맥파 추정</small></div>
-          <div class="camera-meter"><video id="cameraPreview" playsinline muted></video><div class="pulse-ring"><span id="bpm">--</span><small>BPM</small></div></div>
-          <canvas id="hrvWave" class="wave" width="800" height="140"></canvas>
-          <div class="timer"><strong id="hrvTimer">30</strong><span>초</span></div>
-          <p class="help-text">손가락으로 후면 카메라와 플래시를 살짝 덮고 움직이지 마세요. PC에서는 데모 모드로 확인할 수 있습니다.</p>
-        </div>
-        <div class="actions split"><button class="secondary" type="button" id="skipHrvBtn">데모 HRV 사용</button><button class="primary" type="button" id="stopHrvBtn">측정 완료</button></div>
-      </section>
-
-      <section id="gait" class="screen">
-        <div class="panel">
-          <div class="section-title"><span>보행 측정</span><small>좌우 균형과 리듬</small></div>
-          <div class="gait-layout"><div class="foot left" id="leftFoot">L</div><div class="walk-counter"><strong id="stepCount">0</strong><span>steps</span></div><div class="foot right" id="rightFoot">R</div></div>
-          <canvas id="gaitWave" class="wave" width="800" height="140"></canvas>
-          <div class="timer"><strong id="gaitTimer">20</strong><span>초</span></div>
-          <p class="help-text">휴대폰을 몸통 중앙에 고정하고 평소 속도로 걸어주세요. iPhone은 모션 권한 승인이 필요합니다.</p>
-        </div>
-        <div class="actions split"><button class="secondary" type="button" id="skipGaitBtn">데모 보행 사용</button><button class="primary" type="button" id="startGaitBtn">보행 측정 시작</button></div>
-      </section>
-
-      <section id="result" class="screen">
-        <div class="score-card"><p id="resultName">측정 결과</p><strong id="readinessScore">--</strong><span id="readinessLabel">대기</span></div>
-        <div class="panel"><div class="section-title"><span>핵심 지표</span><small>현장 판단용</small></div><div class="grid two"><article class="stat"><span>회복도</span><strong id="recoveryScore">--</strong></article><article class="stat"><span>피로도</span><strong id="fatigueScore">--</strong></article><article class="stat"><span>좌우 균형</span><strong id="balanceScore">--</strong></article><article class="stat"><span>리듬</span><strong id="rhythmScore">--</strong></article></div></div>
-        <div class="panel"><div class="section-title"><span>분석 메모</span><small>자동 생성</small></div><ul class="insights" id="insights"></ul></div>
-        <div class="panel"><div class="section-title"><span>선수 기록 연계</span><small>경기력 + 바이오</small></div><div id="playerContext" class="context-list"></div></div>
-        <div class="panel"><div class="section-title"><span>최근 측정</span><small>브라우저 저장</small></div><div id="historyList" class="history-list"></div></div>
-        <div class="actions"><button class="primary" type="button" id="saveResultBtn">결과 저장</button><button class="secondary" type="button" id="resetBtn">새 측정</button></div>
-      </section>
+      <section id="hrv" class="screen"><div class="panel"><div class="section-title"><span>HRV 측정</span><small>카메라 기반 맥파 추정</small></div><div class="camera-meter"><video id="cameraPreview" playsinline muted></video><div class="pulse-ring"><span id="bpm">--</span><small>BPM</small></div></div><canvas id="hrvWave" class="wave" width="800" height="140"></canvas><div class="timer"><strong id="hrvTimer">30</strong><span>초</span></div><p class="help-text">손가락으로 후면 카메라와 플래시를 살짝 덮고 움직이지 마세요. PC에서는 데모 모드로 확인할 수 있습니다.</p></div><div class="actions split"><button class="secondary" type="button" id="skipHrvBtn">데모 HRV 사용</button><button class="primary" type="button" id="stopHrvBtn">측정 완료</button></div></section>
+      <section id="gait" class="screen"><div class="panel"><div class="section-title"><span>보행 측정</span><small>좌우 균형과 리듬</small></div><div class="gait-layout"><div class="foot left" id="leftFoot">L</div><div class="walk-counter"><strong id="stepCount">0</strong><span>steps</span></div><div class="foot right" id="rightFoot">R</div></div><canvas id="gaitWave" class="wave" width="800" height="140"></canvas><div class="timer"><strong id="gaitTimer">20</strong><span>초</span></div><p class="help-text">휴대폰을 몸통 중앙에 고정하고 평소 속도로 걸어주세요. iPhone은 모션 권한 승인이 필요합니다.</p></div><div class="actions split"><button class="secondary" type="button" id="skipGaitBtn">데모 보행 사용</button><button class="primary" type="button" id="startGaitBtn">보행 측정 시작</button></div></section>
+      <section id="result" class="screen"><div class="score-card"><p id="resultName">측정 결과</p><strong id="readinessScore">--</strong><span id="readinessLabel">대기</span></div><div class="panel"><div class="section-title"><span>핵심 지표</span><small>현장 판단용</small></div><div class="grid two"><article class="stat"><span>회복도</span><strong id="recoveryScore">--</strong></article><article class="stat"><span>피로도</span><strong id="fatigueScore">--</strong></article><article class="stat"><span>좌우 균형</span><strong id="balanceScore">--</strong></article><article class="stat"><span>리듬</span><strong id="rhythmScore">--</strong></article></div></div><div class="panel"><div class="section-title"><span>분석 메모</span><small>자동 생성</small></div><ul class="insights" id="insights"></ul></div><div class="panel"><div class="section-title"><span>선수 기록 연계</span><small>경기력 + 바이오</small></div><div id="playerContext" class="context-list"></div></div><div class="panel"><div class="section-title"><span>최근 측정</span><small>브라우저 저장</small></div><div id="historyList" class="history-list"></div></div><div class="actions"><button class="primary" type="button" id="saveResultBtn">결과 저장</button><button class="secondary" type="button" id="exportCsvBtn">CSV 다운로드</button><button class="secondary" type="button" id="resetBtn">새 측정</button></div></section>
     </main>
     <script src="./app.js"></script>
+    <script src="./enhance.js"></script>
   </body>
 </html>
